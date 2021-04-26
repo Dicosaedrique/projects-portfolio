@@ -1,0 +1,34 @@
+{
+    "name": "tp2-sudoku",
+    "version": "1.0.0",
+    "description": "tp2 IA",
+    "main": "server.js",
+    "scripts": {
+        "dev": "webpack serve --mode=development",
+        "build": "webpack --mode=production"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lucasgonz/TP2-Sudoku.git"
+    },
+    "author": "",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/lucasgonz/TP2-Sudoku/issues"
+    },
+    "homepage": "https://github.com/lucasgonz/TP2-Sudoku#readme",
+    "dependencies": {
+        "express": "^4.17.1"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.12.17",
+        "@babel/plugin-proposal-class-properties": "^7.12.13",
+        "@babel/preset-env": "^7.12.17",
+        "babel-loader": "^8.2.2",
+        "html-webpack-plugin": "^5.2.0",
+        "prettier": "^2.2.1",
+        "webpack": "^5.23.0",
+        "webpack-cli": "^4.5.0",
+        "webpack-dev-server": "^3.11.2"
+    }
+}
