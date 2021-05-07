@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <title>Projet final - Algorithme génétique</title>
+
+        <!-- IMPORT Chart.js-->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <!-- IMPORT DE BOOTSTRAP -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl"
+            crossorigin="anonymous"
+        />
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+            crossorigin="anonymous"
+        ></script>
+    </head>
+    <body>
+        <h1 class="display-5 my-5 text-center">
+            <i class="fas fa-dna"></i> Recherche de phrases par algorithme génétique <i class="fas fa-dna"></i>
+        </h1>
+
+        <!-- Selection de la phrase à trouver -->
+        <div class="container-md my-4">
+            <label for="phrase_input" class="form-label h2">Phrase à trouver</label>
+            <div class="input-group w-75">
+                <input type="text" class="form-control" id="phrase_input" />
+                <button class="btn btn-secondary" id="button_generate_phrase">
+                    <i class="fas fa-dice"></i> Autre phrase
+                </button>
+            </div>
+            <div class="form-text">
+                Ça sera le génome (la phrase) cible que l'algorithme génétique devra retrouver.
+            </div>
+        </div>
+
+        <!-- Paramétrage de l'affichage des solutions -->
+        <div class="container-md my-4">
+            <label for="max_displayed_elem" class="form-label h6">Nombre de meilleures solutions à afficher</label>
+            <input type="number" class="form-control w-25" id="max_displayed_elem" min="1" />
+        </div>
+
+        <!-- Expérience génétique -->
+        <section class="container-fluid">
+            <h2 class="text-center">Expérience génétique</h2>
+
+            <!-- Boutons de contrôle -->
+            <div class="container d-flex justify-content-center my-4">
+                <div class="btn-group mt-2">
+                    <button class="btn btn-primary px-4" id="button_start">
+                        <i class="fas fa-play"></i> Lancer
+                    </button>
+                    <button class="btn btn-success px-4" id="button_pause">
+                        <i class="fas fa-pause"></i> Pause
+                    </button>
+                    <button class="btn btn-danger px-4" id="button_stop">
+                        <i class="fas fa-stop"></i> Arrêter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Affichage des résultats de l'expérience -->
+            <div class="container text-center">
+                <p id="result_success" class="h3 text-success" style="display: none">
+                    La solution a été trouvée en <span id="result_generation"></span> générations
+                </p>
+                <p id="result_failure" class="h3 text-danger" style="display: none"></p>
+            </div>
+
+            <!-- Contient le rendu de l'expérience et de son graphique -->
+            <div class="row justify-content-center row-cols-1 row-cols-lg-2">
+                <div id="renderer_container" class="col overflow-auto"></div>
+                <div id="chart_canvas_container" class="col">
+                    <canvas id="chart_canvas"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Paramètres de l'algorithme -->
+        <section class="container-md mt-4">
+            <h3>Paramètres de l'algorithme</h3>
+
+            <form class="my-3">
+                <div class="mb-4">
+                    <label for="population_size" class="form-label h5">Taille de la population</label>
+                    <div class="input-group w-50">
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="population_size"
+                            min="1"
+                            max="1000"
+                            placeholder="Taille de la population"
+                        />
+                        <span class="input-group-text">génomes</span>
+                    </div>
+                    <div class="form-text">
+                        Nombre de génomes (phrases candidates) dans la population de recherche.
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="mutation_rate" class="form-label h5">Taux de mutation (0% - 100%)</label>
+                    <div class="input-group w-50">
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="mutation_rate"
+                            min="0"
+                            max="100"
+                            placeholder="Taux de mutation (0% - 100%)"
+                        />
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <div class="form-text">
+                        Pourcentage de chance qu'un gène du génome (une lettre dans la phrase) mute, c'est à dire
+                        que le gène soit remplacés par un autre gène aléatoire.
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="keep_best" class="form-label h5">Selection naturelle</label>
+                    <div class="input-group w-50">
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="keep_best"
+                            min="1"
+                            max="100"
+                            placeholder="Garder les % meilleurs"
+                        />
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <div class="form-text">
+                        Pourcentage des meilleurs éléments que l'on va garder lors de l'étape de selection
+                        naturelle (par défaut : tous).
+                        <br /><b><u>Note :</u> Les individus sont dans tous les cas pondérés par acceptabilité.</b>
+                    </div>
+                </div>
+                <div id="fitness-container" class="mb-4">
+                    <label for="fitness_input" class="form-label h5">Choix de la fonction d'évaluation</label>
+                </div>
+                <div class="mb-4">
+                    <p class="h5">Choix du point de séparation (croisement des génomes)</p>
+
+                    <div class="form-text mb-2">
+                        Lors d'un croisement de deux génomes, un point de milieu est choisi et on prendra la partie
+                        gauche d'un génome et la partie droite de l'autre pour former le nouveau génome croisé.
+                        Vous pouvez soit laisser ce point être choisi aléatoirement soit choisir une valeur fixe
+                        (%).
+                    </div>
+                    <input class="form-check-input" type="checkbox" id="random_midpoint" checked />
+                    <label class="form-check-label" for="random_midpoint"
+                        ><i class="fas fa-dice mr-2"></i> Aléatoire</label
+                    >
+                    <div id="slider_midpoint"></div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Résultats du benchmarking -->
+        <section class="container-md mt-5">
+            <h1 class="mb-2">Résultats obtenus (benchmark)</h1>
+            <section class="text-danger">
+                <h2>Limites</h2>
+                <p>
+                    Même si nous nous sommes efforcés d’obtenir des résultats basés sur plusieurs même calculs afin
+                    d’obtenir des valeurs moyennes, nous avons été confrontés à des soucis de durées (certains
+                    benchmarks prenaient plus de 3 heures à effectuer.
+                </p>
+                <p>
+                    Il est aussi important de rappeler que toutes les expériences se sont faites avec des génomes
+                    de taille inférieure ou égale à 100 et que donc on ne peut pas conclure avec certitude sur les
+                    grands génomes mais uniquement les hypothétiser.
+                </p>
+                <p>
+                    Il est aussi important de rappeler que toutes les expériences se sont faites avec des génomes
+                    de taille inférieure ou égale à 100 et que donc on ne peut pas conclure avec certitude sur les
+                    grands génomes mais uniquement les hypothétiser.
+                </p>
+            </section>
+
+            <section class="my-5">
+                <h2>Sélection naturelle (meilleurs génomes retenus)</h2>
+                <h4 class="mt-3">Paramètres de l'éxpérience</h4>
+                <dl>
+                    <dt>Variation du pourcentage de meilleur génome retenus :</dt>
+                    <dd>1% à 100%</dd>
+                    <dt>Nombre d'invividus :</dt>
+                    <dd>
+                        5 individus aléatoire de longueur 50 (testés individuellement 10 fois pour chaque option)
+                    </dd>
+                    <dt>Autres paramètres :</dt>
+                    <dd>Paramètres de recherches optimaux</dd>
+                    <dt>Légende :</dt>
+                    <dd>Nombre moyen de génération en fonction du % de meilleur génome</dd>
+                </dl>
+
+                <h4 class="text-center mt-4">Résultats</h4>
+                <div><canvas id="benchmark_keep_best"></canvas></div>
+                <h4 class="text-center mt-4">Résultats (détails sur 1% à 80%)</h4>
+                <div><canvas id="benchmark_keep_best_details"></canvas></div>
+            </section>
+
+            <section class="my-5">
+                <h2>Taux de mutation</h2>
+                <h4 class="mt-3">Paramètres de l'éxpérience</h4>
+                <dl>
+                    <dt>Variation du taux de mutation :</dt>
+                    <dd>0.1% à 8% (avec un pas de 0.1%)</dd>
+                    <dt>Nombre d'invividus :</dt>
+                    <dd>10 individus aléatoire de longueur 50</dd>
+                    <dt>Autres paramètres :</dt>
+                    <dd>Paramètres de recherches optimaux</dd>
+                    <dt>Légende :</dt>
+                    <dd>Nombre moyen de génération en fonction du % de mutation</dd>
+                </dl>
+
+                <h4 class="text-center mt-4">Résultats</h4>
+                <div><canvas id="benchmark_mutation"></canvas></div>
+                <h4 class="text-center mt-4">Résultats (détails sur 0.1% à 7.0%)</h4>
+                <div><canvas id="benchmark_mutation_details"></canvas></div>
+            </section>
+
+            <section class="my-5">
+                <h2>Fonction d’évaluation</h2>
+                <dl>
+                    <dt>Fonction d'évaluation :</dt>
+                    <dd>Fonction simple / Fonction avancée</dd>
+                    <dt>Conservation du mailleur % d'individus :</dt>
+                    <dd>100% | 10%</dd>
+                    <dt>Nombre d'invividus :</dt>
+                    <dd>20 individus aléatoire de longueur 30</dd>
+                    <dt>Autres paramètres :</dt>
+                    <dd>Paramètres de recherches optimaux</dd>
+                    <dt>Rouge :</dt>
+                    <dd>100% des meilleurs individus conservés</dd>
+                    <dt>Vert :</dt>
+                    <dd>10% des meilleurs individus conservés</dd>
+                    <dt>Barres à gauche :</dt>
+                    <dd>Nombre de génération moyenne (fonction simple)</dd>
+                    <dt>Barres à droite :</dt>
+                    <dd>Nombre de génération moyenne (fonction avancée)</dd>
+                </dl>
+
+                <h4 class="text-center mt-4">Résultats</h4>
+                <div><canvas id="benchmark_fitness"></canvas></div>
+            </section>
+
+            <section class="my-5">
+                <h2>Taille de la population</h2>
+                <dl>
+                    <dt>Génomes de tailles 50 :</dt>
+                    <dd>Population de taille 10 à 1000 (avec un pas de 10)</dd>
+                    <dt>Génomes de tailles 100 :</dt>
+                    <dd>Population de taille 100 à 10.000 (avec un pas de 100)</dd>
+                    <dt>Nombre d'invividus :</dt>
+                    <dd>10 individus aléatoires pour chaque taille</dd>
+                    <dt>Autres paramètres :</dt>
+                    <dd>Paramètres de recherches optimaux</dd>
+                    <dt>Légende :</dt>
+                    <dd>Nombre moyen de génération en fonction de la taille de la population</dd>
+                </dl>
+
+                <h4 class="text-center mt-4">Individus de taille 50</h4>
+                <div><canvas id="benchmark_population"></canvas></div>
+                <h4 class="text-center mt-4">Individus de taille 100</h4>
+                <div><canvas id="benchmark_population_big"></canvas></div>
+            </section>
+
+            <section class="my-5">
+                <h2>Midpoint (croisement)</h2>
+                <dl>
+                    <dt>Variation du midpoint :</dt>
+                    <dd>5% à 95% (avec un pas de 5%)</dd>
+                    <dt>Nombre d'invividus :</dt>
+                    <dd>100 individus aléatoires de longueur 50</dd>
+                    <dt>Autres paramètres :</dt>
+                    <dd>Paramètres de recherches optimaux</dd>
+                    <dt>Légende :</dt>
+                    <dd>Nombre moyen de génération en fonction du midpoint</dd>
+                </dl>
+
+                <h4 class="text-center mt-4">Résultats</h4>
+                <div><canvas id="benchmark_midpoint"></canvas></div>
+            </section>
+
+            <section class="my-5">
+                <h2>Longueur des génomes</h2>
+                <dl>
+                    <dt>Variation de la taille des génomes :</dt>
+                    <dd>1 à 100 caractères</dd>
+                    <dt>Nombre d'invividus :</dt>
+                    <dd>10 génomes aléatoire pour chaque longueur</dd>
+                    <dt>Paramètres de recherche :</dt>
+                    <dd>Optimaux</dd>
+                    <dt>Légende :</dt>
+                    <dd>Nombre de génération moyenne en fonction de la longueur du génome</dd>
+                </dl>
+                <p class="text-danger">
+                    <b>Attention :</b> Ici on ne compare que pour les meilleurs paramètres de recherche
+                </p>
+
+                <h4 class="text-center mt-4">Résultats</h4>
+                <div><canvas id="benchmark_genome_size"></canvas></div>
+            </section>
+        </section>
+
+        <!-- BENCHMARKING -->
+        <section class="container-md">
+            <h1>Benchmarking</h1>
+            <div class="my-3">
+                <p class="text-secondary">
+                    Le benchmark est à utiliser en mode développement car il est uniquement paramétrable depuis les
+                    fichiers de scripts (fichier benchmark/Benchmark.config.ts puis appliquer les bons paramètres
+                    dans benchmark/Benchmark.worker.ts)
+                </p>
+                <button class="btn btn-primary px-4" id="button_benchmark">Lancer le benchmarking</button>
+                <div class="mt-4">
+                    <input class="form-check-input" type="checkbox" id="download_results" checked />
+                    <label class="form-check-label" for="download_results"
+                        ><i class="fas fa-file-download mr-2"></i> Télécharger les résultats</label
+                    >
+                    <div class="form-text">
+                        Télécharge les résultats du benchmark au format JSON une fois le benchmark fini
+                    </div>
+                </div>
+
+                <div id="benchmark_container" class="my-4">
+                    <p class="lead mt-2" id="benchmark_start"></p>
+                    <p class="lead mt-2" id="benchmark_result"></p>
+                    <div class="progress">
+                        <div
+                            id="benchmark_progress"
+                            class="progress-bar progress-bar-striped progress-bar-animated"
+                            role="progressbar"
+                            style="width: 0%"
+                        >
+                            0%
+                        </div>
+                    </div>
+                    <p class="lead mt-2" id="benchmark_progress_details"></p>
+                </div>
+            </div>
+        </section>
+        <br /><br /><br /><br /><br /><br /><br />
+    </body>
+</html>
