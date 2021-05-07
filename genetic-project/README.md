@@ -1,1 +1,1 @@
-# Projet final d'IA sur le thèmes des algos génétiques
+# Projet final d'IA sur le thème des algos génétiques
